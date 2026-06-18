@@ -5,7 +5,7 @@ General purpose utilities.
 ## Documentation
 
 Full documentation lives in `docs/` and is published to GitHub Pages:
-<https://nacitar.github.io/sevaht-utility/>.
+<https://sevaht.github.io/sevaht-utility/>.
 
 Highlights:
 
