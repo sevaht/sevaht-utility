@@ -42,6 +42,12 @@ source = "vcs"
 [tool.hatch.build.targets.wheel]
 packages = ["src/sevaht_utility"]
 
+[tool.hatch.build.targets.sdist]
+# Allowlist so dev/local files (.claude, checks, test-publish.sh, .github, ...)
+# never leak into a published sdist. pyproject.toml/PKG-INFO/README/.gitignore
+# are force-included by hatchling regardless.
+include = ["/src", "/tests", "/LICENSE"]
+
 [tool.black]
 line-length = 79
 skip-magic-trailing-comma = true
