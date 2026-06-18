@@ -1,10 +1,20 @@
 from __future__ import annotations
 
 import logging
+from pathlib import Path
 
 import pytest
 
-from sevaht_utility.log_utility import log_exceptions
+from sevaht_utility.log_utility import LogFileOptions, log_exceptions
+
+
+def test_log_file_options_are_keyword_only_after_path() -> None:
+    # Everything after `path` is keyword-only; passing positionally must fail.
+    with pytest.raises(TypeError):
+        LogFileOptions(Path("x"), 512, 1)  # type: ignore[misc]
+    options = LogFileOptions(Path("x"), max_kb=512, backup_count=1)
+    assert options.max_kb == 512
+    assert options.backup_count == 1
 
 
 def test_log_exceptions_logs_and_reraises(

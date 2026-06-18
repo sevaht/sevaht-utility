@@ -13,6 +13,7 @@ from sevaht_utility.parsing import (
     CsvLoadOptions,
     DataMapping,
     NotADataclassError,
+    ShortRowError,
     StringConverter,
     StringParser,
     StringParserError,
@@ -573,6 +574,30 @@ def test_csv_load_with_empty_file_yields_nothing(tmp_path: Path) -> None:
     assert list(csv_load(p)) == []
 
 
+def test_csv_load_skips_blank_lines() -> None:
+    # Blank lines (leading, interior, and trailing) are common in real CSV
+    # files and must be skipped rather than crash with an IndexError.
+    lines = ["", "a,b", "1,2", "", "3,4", ""]
+    result = list(csv_load(lines))
+    assert result == [{"a": "1", "b": "2"}, {"a": "3", "b": "4"}]
+
+
+def test_csv_load_blank_lines_only_yields_nothing() -> None:
+    assert list(csv_load(["", "", ""])) == []
+
+
+def test_csv_load_short_row_raises_short_row_error() -> None:
+    lines = ["a,b,c", "1,2,3", "4,5"]
+    with pytest.raises(ShortRowError) as exc_info:
+        list(csv_load(lines))
+    error = exc_info.value
+    assert error.column_count == 2
+    assert error.column_index == 2
+    assert error.field_name == "c"
+    # line 1 is the header, line 2 the first row, line 3 the short row
+    assert error.line_number == 3
+
+
 def test_strip_json5_comments_and_trailing_commas() -> None:
     samples = {
         '{"a": "simple", // comment\n "b": "text",}': {
@@ -616,3 +641,11 @@ def test_json5_load_trailing_comma_in_array() -> None:
     text = '{"arr": [1,2,3,], "x": 5,}'
     result = json5_load(text)
     assert result == {"arr": [1, 2, 3], "x": 5}
+
+
+def test_json5_load_preserves_trailing_comma_like_text_in_strings() -> None:
+    # A comma followed by a closing bracket inside a string must not be treated
+    # as a trailing comma and stripped.
+    assert json5_load('{"x": "a,}"}') == {"x": "a,}"}
+    assert json5_load('{"x": "1,]"}') == {"x": "1,]"}
+    assert json5_load('["a,]", "b,}",]') == ["a,]", "b,}"]

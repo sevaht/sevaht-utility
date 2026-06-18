@@ -28,6 +28,16 @@ if TYPE_CHECKING:
         ("", []),
         ("___", []),
         ("---", []),
+        # A single medial acronym splits from the word that follows it.
+        ("HTTPServer", ["http", "server"]),
+        ("XMLParser", ["xml", "parser"]),
+        ("userIDName", ["user", "id", "name"]),
+        ("ABCdef", ["ab", "cdef"]),
+        # Consecutive acronyms intentionally stay merged (no dictionary).
+        ("someXMLHTTPRequest", ["some", "xmlhttp", "request"]),
+        # Regressions: trailing acronyms and lone words must be unaffected.
+        ("userID", ["user", "id"]),
+        ("ID", ["id"]),
     ],
 )
 def test_split_into_words(name: str, expected_words: list[str]) -> None:
@@ -88,6 +98,8 @@ def test_convert_name_examples(
         "someSampleName",
         "SomeSampleName",
         "single",
+        "HTTPServer",
+        "userIDName",
     ],
 )
 @pytest.mark.parametrize("intermediate_style", list(NameStyle))

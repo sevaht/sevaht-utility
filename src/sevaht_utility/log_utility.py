@@ -1,3 +1,12 @@
+"""Opinionated logging setup and helpers.
+
+Provides a console-plus-optional-rotating-file logging configuration
+(:func:`configure_logging`, :func:`configure_logging_custom`), argparse
+integration (:func:`add_log_arguments`), a context manager to silence the
+console temporarily (:func:`suppress_console_logging`), and a decorator that
+logs and re-raises uncaught exceptions (:func:`log_exceptions`).
+"""
+
 from __future__ import annotations
 
 import logging
@@ -25,7 +34,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class LogFileOptions:
     path: Path
-    _ = KW_ONLY
+    _: KW_ONLY
     max_kb: int
     backup_count: int
     level: int = logging.DEBUG
@@ -47,6 +56,19 @@ class LogFileOptions:
 def configure_logging_custom(
     console_level: int, log_file_options: LogFileOptions | None = None
 ) -> None:
+    """Install a console handler and an optional rotating file handler.
+
+    Replaces the root logger's handlers. The console handler honors
+    ``console_level`` and drops records flagged ``file_only``; when
+    ``log_file_options`` is given, a file handler captures everything at its
+    own level with timestamps.
+
+    Args:
+        console_level: Minimum level shown on the console.
+        log_file_options: File logging configuration, or ``None`` for
+            console-only.
+    """
+
     class SuppressFileOnly(logging.Filter):
         def filter(self, record: logging.LogRecord) -> bool:
             return not getattr(record, "file_only", False)
@@ -79,6 +101,16 @@ def configure_logging_custom(
 
 
 def add_log_arguments(parser: argparse.ArgumentParser) -> None:
+    """Add standard logging options to an argument parser.
+
+    Adds ``--log-file`` and a mutually exclusive verbosity group
+    (``-v``/``--verbose``, ``-q``/``--quiet``, ``--debug``) writing to the
+    ``console_level`` and ``log_file`` destinations consumed by
+    :func:`configure_logging`.
+
+    Args:
+        parser: The parser (or subparser) to extend.
+    """
     log_group = parser.add_argument_group("logging")
     log_group.add_argument(
         "--log-file",
@@ -120,6 +152,18 @@ def configure_logging(
     backup_count: int = 1,
     append: bool = True,
 ) -> None:
+    """Configure logging from parsed :func:`add_log_arguments` options.
+
+    The console level comes from ``args.console_level`` (default ``WARNING``);
+    when ``args.log_file`` is set, a rotating file handler is added.
+
+    Args:
+        args: Parsed arguments containing ``console_level`` and ``log_file``.
+        max_kb: Max size per log file in KiB before rotation; ``0`` disables
+            rotation.
+        backup_count: Number of rotated backups to keep; ``0`` keeps none.
+        append: Whether to append to an existing log file rather than truncate.
+    """
     configure_logging_custom(
         console_level=args.console_level or logging.WARNING,
         log_file_options=(
@@ -171,6 +215,21 @@ def log_exceptions(
     message: str = "uncaught exception",
     file_only: bool = True,
 ) -> Callable[[Callable[P, R]], Callable[P, R]]:
+    """Decorate a callable to log any exception it raises, then re-raise.
+
+    The exception is logged with a traceback; the call still propagates it.
+
+    Args:
+        logger: Logger to use; defaults to one named for the wrapped function's
+            module.
+        message: Message logged alongside the traceback.
+        file_only: Tag the record so :func:`configure_logging_custom`'s console
+            handler suppresses it (file handlers still receive it).
+
+    Returns:
+        A decorator that wraps a function while preserving its signature.
+    """
+
     def decorator(function: Callable[P, R]) -> Callable[P, R]:
         target_logger = logger or logging.getLogger(function.__module__)
 

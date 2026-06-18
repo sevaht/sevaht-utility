@@ -4,19 +4,16 @@ build-backend = "hatchling.build"
 
 [project]
 name = "sevaht-utility"
-version = "0.1.0"
+dynamic = ["version"]
 description = "General purpose utilities."
 authors = [
     {name = "Jacob McIntosh", email = "nacitar.sevaht@gmail.com"}
 ]
 readme = "README.md"
 license = "Unlicense"
-requires-python = ">=3.11"
+requires-python = ">=3.12"
 dependencies = [
 ]
-
-[project.scripts]
-sevaht-utility = "sevaht_utility.__main__:main"
 
 [dependency-groups]
 dev = [
@@ -26,7 +23,18 @@ dev = [
     "pytest (>=9.0.2,<10.0.0)",
     "ruff (>=0.15.8,<0.16.0)",
     "twine (>=6.2.0,<7.0.0)",
+    "vulture (>=2.14,<3.0.0)",
 ]
+docs = [
+    "sphinx (>=8.1.0,<9.0.0)",
+    "furo (>=2024.8.6)",
+    "myst-parser (>=4.0.0,<5.0.0)",
+]
+
+[project.urls]
+Homepage = "https://github.com/nacitar/sevaht-utility"
+Source = "https://github.com/nacitar/sevaht-utility"
+Issues = "https://github.com/nacitar/sevaht-utility/issues"
 
 [tool.hatch.version]
 source = "vcs"
@@ -40,12 +48,14 @@ skip-magic-trailing-comma = true
 
 [tool.mypy]
 strict = true
+exclude = ["^docs/"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 
 [tool.ruff]
 line-length = 79
+extend-exclude = ["docs"]
 
 [tool.ruff.lint]
 extend-ignore = ["COM812", "COM819", "E203", "E501", "TD003"]
@@ -58,4 +68,14 @@ select = [
 ]
 
 [tool.ruff.lint.per-file-ignores]
+"checks" = ["S603"]
 "tests/**/*" = ["PLR2004", "S101"]
+
+[tool.vulture]
+# This is a library: public API surface looks "unused" to vulture since
+# nothing in-repo calls it, which is the false positive vulture's own docs
+# tell you to address by raising min_confidence rather than whitelisting.
+min_confidence = 70
+# Fixture functions whose unused, literally-named parameters are the point
+# of the test (asserting on extracted hint names like "a", "b", "c").
+exclude = ["tests/test_hinting.py"]
