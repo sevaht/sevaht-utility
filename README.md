@@ -1,6 +1,6 @@
-# sevaht utility
+# sevaht-utility
 
-General purpose utilities.
+General-purpose utilities, including typed CSV loading.
 
 ## Documentation
 
