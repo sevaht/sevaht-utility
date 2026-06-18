@@ -70,7 +70,7 @@ skip-magic-trailing-comma = true
 
 [tool.mypy]
 strict = true
-exclude = ["^docs/"]
+exclude = ["^docs/", "^dist/"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
