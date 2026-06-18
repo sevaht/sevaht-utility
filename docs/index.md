@@ -1,6 +1,6 @@
 # sevaht-utility
 
-General-purpose, dependency-free Python utilities, fully type-hinted and tested.
+General-purpose Python utilities.
 
 The library is small and focused. The most-used pieces are:
 
