@@ -5,7 +5,7 @@ casing convention used (``snake_case``, ``kebab-case``, ``camelCase``,
 ``PascalCase``, or whitespace separated) and rebuilds them in a chosen
 :class:`NameStyle`.
 
-The splitter recognises a single *medial acronym* using a pure heuristic, so
+The splitter recognizes a single *medial acronym* using a pure heuristic, so
 ``"HTTPServer"`` becomes ``["http", "server"]`` and ``"getHTTPResponseCode"``
 becomes ``["get", "http", "response", "code"]``. It deliberately does **not**
 split *consecutive* acronyms (``"XMLHTTPRequest"`` stays ``"xmlhttp"`` +
